@@ -17,47 +17,47 @@ class AntiFraud16{
         String output3FileLocation=args[4];
 
         try {
-			// Step 1: Call to build the inital and simple graph.
-			Graph g=buildGraph(batchFileLocation);
-			System.out.println("Initial Graph Created");
-			/* Step2 : For Feature 1. Simple lookup into any one(source or destination) adjecency lists. O(1) operation for each datapoint in the stream file.
-			So it is not affected by the size of batch processed graph.
-			*/
-            long startTime = System.currentTimeMillis();
-            featureUniDirectional(g,streamFileLocation,output1FileLocation);
-            long endTime = System.currentTimeMillis();
-            long elapsedTime = endTime - startTime;
-            System.out.println("OutputText1 Created"+elapsedTime);
+    			// Step 1: Call to build the inital and simple graph.
+    			Graph g=buildGraph(batchFileLocation);
+    			System.out.println("Initial Graph Created");
+    			/* Step2 : For Feature 1. Simple lookup into any one(source or destination) adjecency lists. O(1) operation for each datapoint in the stream file.
+    			So it is not affected by the size of batch processed graph.
+    			*/
+                long startTime = System.currentTimeMillis();
+                featureUniDirectional(g,streamFileLocation,output1FileLocation);
+                long endTime = System.currentTimeMillis();
+                long elapsedTime = endTime - startTime;
+                System.out.println("OutputText1 Created"+elapsedTime);
 
 
-           /* For Feature3- Creating a graph with adjacency list till depth 2. Then using that depth 2 graph to get simple intersection of the adjacency lists.For each stream data point this would be a simple O(n) process
-            Better way would have been to create a graph of adjacency list haveing depth 4 and then doing a simple lookup in O(1) for each stream entry. But is taking program memory more than I have. 
-            If there is a 32gb ram or something like that we can make this into simpe unidirectional search just by doing
-            Graph depthFour=buildNDepthGraph(g,4);
-           	featureUniDirectional(depthFour,streamFileLocation,output3FileLocation);
-			*/
-            startTime = System.currentTimeMillis();
-            Graph depthTwo=buildNDepthGraph(g,2);
-            endTime = System.currentTimeMillis();
-            elapsedTime = endTime - startTime;
-            System.out.println("Graph depth 2 created"+elapsedTime);
+               /* For Feature3- Creating a graph with adjacency list till depth 2. Then using that depth 2 graph to get simple intersection of the adjacency lists.For each stream data point this would be a simple O(n) process
+                Better way would have been to create a graph of adjacency list haveing depth 4 and then doing a simple lookup in O(1) for each stream entry. But is taking program memory more than I have. 
+                If there is a 32gb ram or something like that we can make this into simpe unidirectional search just by doing
+                Graph depthFour=buildNDepthGraph(g,4);
+               	featureUniDirectional(depthFour,streamFileLocation,output3FileLocation);
+    			*/
+                startTime = System.currentTimeMillis();
+                Graph depthTwo=buildNDepthGraph(g,2);
+                endTime = System.currentTimeMillis();
+                elapsedTime = endTime - startTime;
+                System.out.println("Graph depth 2 created"+elapsedTime);
 
 
-            startTime = System.currentTimeMillis();
-           	featureBidirectional(depthTwo,streamFileLocation,output3FileLocation);
-            endTime = System.currentTimeMillis();
-            elapsedTime = endTime - startTime;
-            System.out.println("OutputText3Created"+elapsedTime);
-           	/* Best way would be to use the graph made till level2 and do a simple lookup. As i am able to create adjecency lists till depth2 in memory i would use the unidirectionl lookup here O(1).
-           	I cant use unidirectional for feature3 because the graph for depth4 graph is much bigger than the memory i have. 
-           	I want to try to keep it O(1) as much as possible as then it wont depend on size of initial batch graph at the time of processing stream.
-           	*/
-           	startTime = System.currentTimeMillis();
-           	featureUniDirectional(g,streamFileLocation,output2FileLocation);
-            endTime = System.currentTimeMillis();
-            elapsedTime = endTime - startTime;
-            System.out.println("OutputText2Created"+elapsedTime);
-           	depthTwo=null; //For garbage collecion
+                startTime = System.currentTimeMillis();
+               	featureBidirectional(depthTwo,streamFileLocation,output3FileLocation);
+                endTime = System.currentTimeMillis();
+                elapsedTime = endTime - startTime;
+                System.out.println("OutputText3Created"+elapsedTime);
+               	/* Best way would be to use the graph made till level2 and do a simple lookup. As i am able to create adjecency lists till depth2 in memory i would use the unidirectionl lookup here O(1).
+               	I cant use unidirectional for feature3 because the graph for depth4 graph is much bigger than the memory i have. 
+               	I want to try to keep it O(1) as much as possible as then it wont depend on size of initial batch graph at the time of processing stream.
+               	*/
+               	startTime = System.currentTimeMillis();
+               	featureUniDirectional(g,streamFileLocation,output2FileLocation);
+                endTime = System.currentTimeMillis();
+                elapsedTime = endTime - startTime;
+                System.out.println("OutputText2Created"+elapsedTime);
+               	depthTwo=null; //For garbage collecion
 
 
         } catch (Exception e) {
@@ -135,7 +135,7 @@ class AntiFraud16{
                     out.println("NO INFO");
                 }
             }
-
+            out.close();
         } catch (Exception e) {
             e.printStackTrace();
         } 
@@ -162,7 +162,7 @@ class AntiFraud16{
                     out.println("NO INFO");
                 }
             }
-
+            out.close();
         } catch (Exception e) {
             e.printStackTrace();
         } 

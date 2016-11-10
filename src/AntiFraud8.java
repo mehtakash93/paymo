@@ -147,6 +147,7 @@ class AntiFraud8{
                     out.println("NO INFO");
                 }
             }
+            out.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -175,6 +176,7 @@ class AntiFraud8{
                     out.println("NO INFO");
                 }
             }
+            out.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,6 +205,7 @@ class AntiFraud8{
                    out.println("NO INFO");
                 }
             }
+            out.close();
 
         } catch (Exception e) {
             e.printStackTrace();

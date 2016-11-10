@@ -1,8 +1,9 @@
 import java.util.HashMap;
 import java.util.HashSet;
-
+import java.util.Set;
 public class Graph{
 	private final HashMap<Integer,HashSet<Integer>> graph;
+
 	public Graph(){
 		graph=new HashMap();
 	}
@@ -16,10 +17,18 @@ public class Graph{
 		}
 	}
 
+	public void addEdgeList(int node,HashSet<Integer> edgeList){
+		this.graph.put(node,edgeList);
+	}
+
 	public HashSet<Integer> getEdgeList(int node){
 		if(graph.containsKey(node))
 			return graph.get(node);
 		return new HashSet<Integer>();
+	}
+
+	public Set<Integer> getKeySet(){
+		return graph.keySet();
 	}
 	
 	public int getSize(){
