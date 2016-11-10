@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
-class AntiFraud8{
+class AntiFraud16{
     public static void main(String[] args){
         String batchFileLocation=args[0];
         String streamFileLocation=args[1];
@@ -17,38 +17,48 @@ class AntiFraud8{
         String output3FileLocation=args[4];
 
         try {
-            // Step 1: Call to build the inital and simple graph.
-            Graph g=buildGraph(batchFileLocation);
-            System.out.println("Initial Graph Created");
-            /* Step2 : For Feature 1. Simple lookup into any one(source or destination) adjecency lists. O(1) operation for each datapoint in the stream file.
-            So it is not affected by the size of batch processed graph.
-            */
+			// Step 1: Call to build the inital and simple graph.
+			Graph g=buildGraph(batchFileLocation);
+			System.out.println("Initial Graph Created");
+			/* Step2 : For Feature 1. Simple lookup into any one(source or destination) adjecency lists. O(1) operation for each datapoint in the stream file.
+			So it is not affected by the size of batch processed graph.
+			*/
             long startTime = System.currentTimeMillis();
             featureUniDirectional(g,streamFileLocation,output1FileLocation);
             long endTime = System.currentTimeMillis();
             long elapsedTime = endTime - startTime;
             System.out.println("OutputText1 Created"+elapsedTime);
 
-            /* Best way would be to use the graph made till level2 and do a simple lookup. For 8gb ram, using just the O(n) operation during stream would be fine 
-            As storing the level2 graph in memory with 8gb ram is very slow and would cause lots of collisions and become slower eventually
-            But on 16gb level2 graph will working very well.
-            */
-            // For Level2
+
+           /* For Feature3- Creating a graph with adjacency list till depth 2. Then using that depth 2 graph to get simple intersection of the adjacency lists.For each stream data point this would be a simple O(n) process
+            Better way would have been to create a graph of adjacency list haveing depth 4 and then doing a simple lookup in O(1) for each stream entry. But is taking program memory more than I have. 
+            If there is a 32gb ram or something like that we can make this into simpe unidirectional search just by doing
+            Graph depthFour=buildNDepthGraph(g,4);
+           	featureUniDirectional(depthFour,streamFileLocation,output3FileLocation);
+			*/
             startTime = System.currentTimeMillis();
-            featureBidirectional(g,streamFileLocation,output2FileLocation);
+            Graph depthTwo=buildNDepthGraph(g,2);
             endTime = System.currentTimeMillis();
             elapsedTime = endTime - startTime;
-            System.out.println("OutputText2Created"+elapsedTime);
+            System.out.println("Graph depth 2 created"+elapsedTime);
 
-            /* For Feature3- Doing bidirectional search at the time of stream as i cant precompute and store things in my 8gb ram laptop without collisions
-            Will Work slow, but works much faster on a 16gb ram laptop with precomputation till depth2.
-            */
 
             startTime = System.currentTimeMillis();
-            feature3(g,streamFileLocation,output3FileLocation);
+           	featureBidirectional(depthTwo,streamFileLocation,output3FileLocation);
             endTime = System.currentTimeMillis();
             elapsedTime = endTime - startTime;
             System.out.println("OutputText3Created"+elapsedTime);
+           	/* Best way would be to use the graph made till level2 and do a simple lookup. As i am able to create adjecency lists till depth2 in memory i would use the unidirectionl lookup here O(1).
+           	I cant use unidirectional for feature3 because the graph for depth4 graph is much bigger than the memory i have. 
+           	I want to try to keep it O(1) as much as possible as then it wont depend on size of initial batch graph at the time of processing stream.
+           	*/
+           	startTime = System.currentTimeMillis();
+           	featureUniDirectional(g,streamFileLocation,output2FileLocation);
+            endTime = System.currentTimeMillis();
+            elapsedTime = endTime - startTime;
+            System.out.println("OutputText2Created"+elapsedTime);
+           	depthTwo=null; //For garbage collecion
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,7 +81,7 @@ class AntiFraud8{
         return graph;
     }
     
-    // Function for basic preprocessing
+	// Function for basic preprocessing
     public static int[] preProcess(String inputLine){
         int[] edge=new int[2];
         String[] row=inputLine.split(",");
@@ -86,47 +96,25 @@ class AntiFraud8{
         return edge;
     }
 
-    // Simple function to check single degree relationship in the graph
 
     public static boolean checkSingle(Graph graph,int p1,int p2){
-        return graph.getEdgeList(p1).contains(p2);
-    }
+        if(graph.getEdgeList(p1).contains(p2))
+            return true;
+        return false;
 
-    /* Simple function to check second degree relationship in the graph.
-    That is birectional intersection */
+    }
 
     public static boolean checkDouble(Graph graph,int p1,int p2){
-        HashSet<Integer> neighbours0 = graph.getEdgeList(p1);
-        HashSet<Integer> neighbours1 = graph.getEdgeList(p2);
-        HashSet<Integer> intersection = new HashSet(neighbours0); 
-        intersection.retainAll(neighbours1);
-        return (intersection.size() > 0);
-
-    }
-
-    /* Simple function to check fourth degree relationship in the graph.
-    That is birectional search till depth2 on both the sides and then intersection */
-
-    public static boolean checkFour(Graph graph,int p1,int p2){
         HashSet<Integer> neighbours0=graph.getEdgeList(p1);
         HashSet<Integer> neighbours1=graph.getEdgeList(p2);
         HashSet<Integer> intersection = new HashSet(neighbours0); 
-
-        for(int num:neighbours0){
-            intersection.addAll(graph.getEdgeList(num));
-        }
-                                
-        for(int num:neighbours1){
-            HashSet<Integer> intersection1=new HashSet(intersection);
-            intersection1.retainAll(graph.getEdgeList(num));
-            if(intersection1.size()>0)
-                return true;
-        }
+        intersection.retainAll(neighbours1);
+        if(intersection.size()>0)
+            return true;
         return false;
+
     }
 
-    /* For the case with just 8 gb ram, this function will only be used for feature1. If we have more ram, this function
-    is the only thing needed*/
     public static void featureUniDirectional(Graph graph,String infilename,String outfilename){
         String line="";
         BufferedReader br;
@@ -153,8 +141,7 @@ class AntiFraud8{
         } 
     }    
 
-    /* For the case with just 8 gb ram, this function will only be used for feature2. If we have more ram, this function
-    can also be used for feature3 or nothing atall too*/
+
     public static void featureBidirectional(Graph graph,String infilename,String outfilename){
         String line="";
         BufferedReader br;
@@ -182,31 +169,39 @@ class AntiFraud8{
     }
 
 
-    /* For the case with just 8 gb ram, this function will only be used for feature3. But this computes depth+intersection during stream
-    processing whihc can be really slow. So avoid Using this generally*/
-    public static void feature3(Graph graph,String infilename,String outfilename){
-        String line="";
-        BufferedReader br;
-        try{
-            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outfilename)));
-            br=new BufferedReader(new FileReader(infilename));
-            br.readLine();
-            while ((line = br.readLine()) != null) {
-                int[] payment = antifraud.preProcess(line);
-                if(payment.length==2){
-                    if(checkSingle(graph,payment[0],payment[1]) || checkDouble(graph,payment[0],payment[1]) || checkFour(graph,payment[0],payment[1])){
-                        out.println("trusted");
-                    }
-                    else out.println("unverified");      
-                }
-                else {
-                   out.println("NO INFO");
-                }
-            }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        } 
+    public static Graph buildNDepthGraph(Graph graph,int n) throws Exception{
+        Graph level2Graph = new Graph();
+        for(int num:graph.getKeySet()){
+            level2Graph.addEdgeList(num,bfs(graph,n,num));
+        }
+        return level2Graph;
     }
-    
+
+
+
+    public static HashSet<Integer> bfs(Graph graph,int level, int p1){
+        Queue<Integer> q = new LinkedList();
+        HashSet<Integer> finalSet=new HashSet();
+        finalSet.add(p1);
+        q.add(p1);
+        while(level>0 && !q.isEmpty()){  
+            level--;
+            int size=q.size();
+                //List<Integer> temp=new LinkedList<Integer>();
+
+            for(int i=0;i<size;i++){
+                int currentElem=q.remove();
+                for(int num:graph.getEdgeList(currentElem)){
+                    if(!finalSet.contains(num)){
+                        finalSet.add(num);
+                        q.add(num);
+                    }
+                }
+
+            }
+        }
+        return finalSet;
+   }
+
 }
