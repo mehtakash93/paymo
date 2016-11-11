@@ -9,7 +9,7 @@ I chose the key as Set of Integers because i need simple set operations like get
 
 There are two approaches that i have used, given the space/time tradeoff:
 
-## Unidirectional Search With PreComputation
+## 1. Unidirectional Search With PreComputation
 If space is not an issue(need lots of ram) and the speed should be really fast during stream processing:
 ### Algorithm:
 For allowing "trusted" till level x:
@@ -24,7 +24,7 @@ This simply becomes a O(1) lookup and would be really fast irrespecitve of the s
 Precomputed graph tends to be very large and if there isnt enough memory present in the system it will lead to lots of collisions in the hashset and eventually make it slow.
 
 
-## Middle Ground. Bidirectional with Precomputation
+## 2. Middle Ground. Bidirectional with Precomputation
 ## Algorithm:
 
 For allowing "trusted" till level x:
@@ -38,7 +38,7 @@ This simply becomes a O(n) intersection and would be slower than the previous O(
 ### Problems
 Slower than beofore as dependant on the number of nodes(n)
 
-## Simple(Low memory) Bidirectional without Precomputation
+## 3.Simple(Low memory) Bidirectional without Precomputation
 ### Algorithm:
 
 For allowing "trusted" till level x:
@@ -52,6 +52,16 @@ I would not use after level2. Till level2 this is fine.
 
 ### Problems
 Very slow at the time of batch processing and it will slow down as depth(x) increases or number of node in graph(n) increases.
+
+
+# Submission Details
+In my submission, I have made two files AntiFraud16 to run on 16gb ram and AntiFraud8 to run on 8gb ram.
+
+According to my analysis:
+On 8gb ram, doing precomputation results in lots of clashes hence it is advisable to use Method3.
+On 16gb ram, we can real differecne in the Medthod3 and Method2. Hence i have used method2.
+My times on 16gb for level4 with method2 were half of that with method3.
+
 
 
 
