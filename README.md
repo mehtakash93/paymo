@@ -1,8 +1,17 @@
 # Steps to run
 1. Read files in paymo/paymo_input/ and download the corresponding files from links provided, convert them to .txt and replace the current files.
-2. Run "sh run.sh" and check paymo/paymo_output/ directory for output
+2. For testing:
+cd insight_testsuite
+sh run_tests.sh
 
-Or Simply "sh run_tests.sh" for simple tests
+2. If running on 8 gb ram please replace run.sh with the following:
+```shell
+cd src
+javac Graph.java 
+javac AntiFraud8.java
+java -Xmx7000m AntiFraud8 ../paymo_input/batch_payment.txt ../paymo_input/stream_payment.txt ../paymo_output/output1.txt ../paymo_output/output2.txt ../paymo_output/output3.txt
+```
+
 
 # Data Structure
 The choice of data structure i used is adjacency list as my graph is not too dense

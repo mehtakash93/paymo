@@ -6,5 +6,5 @@
 # I'll execute my programs, with the input directory paymo_input and output the files in the directory paymo_output
 cd src
 javac Graph.java 
-javac AntiFraud8.java
-java -Xmx7000m AntiFraud8 ../paymo_input/batch_payment.txt ../paymo_input/stream_payment.txt ../paymo_output/output1.txt ../paymo_output/output2.txt ../paymo_output/output3.txt
+javac AntiFraud16.java
+java -Xmx15000m AntiFraud16 ../paymo_input/batch_payment.txt ../paymo_input/stream_payment.txt ../paymo_output/output1.txt ../paymo_output/output2.txt ../paymo_output/output3.txt

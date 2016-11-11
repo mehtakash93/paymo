@@ -43,7 +43,6 @@ class AntiFraud16{
                 elapsedTime = endTime - startTime;
                 System.out.println("Graph depth 2 created"+elapsedTime);
 
-
                 startTime = System.currentTimeMillis();
                	featureBidirectional(depthTwo,streamFileLocation,output3FileLocation);
                 endTime = System.currentTimeMillis();
@@ -54,7 +53,7 @@ class AntiFraud16{
                	I want to try to keep it O(1) as much as possible as then it wont depend on size of initial batch graph at the time of processing stream.
                	*/
                	startTime = System.currentTimeMillis();
-               	featureUniDirectional(g,streamFileLocation,output2FileLocation);
+               	featureUniDirectional(depthTwo,streamFileLocation,output2FileLocation);
                 endTime = System.currentTimeMillis();
                 elapsedTime = endTime - startTime;
                 System.out.println("OutputText2Created"+elapsedTime);
