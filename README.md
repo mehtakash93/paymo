@@ -2,6 +2,8 @@
 1. Read files in paymo/paymo_input/ and download the corresponding files from links provided, convert them to .txt and replace the current files.
 2. Run "sh run.sh" and check paymo/paymo_output/ directory for output
 
+Or Simply "sh run_tests.sh" for simple tests
+
 # Data Structure
 The choice of data structure i used is adjacency list as my graph is not too dense
 For the adjacency list i used Map with key-->Integer and Value-->Set(Integers).
@@ -36,7 +38,7 @@ Now use this graph at the time of stream processing we need to take an interesec
 This simply becomes a O(n) intersection and would be slower than the previous O(1) lookup but would be using lesser memory by storing nodes while precomputation only till depth x/2 rather than x.
 
 ### Problems
-Slower than beofore as dependant on the number of nodes(n)
+Slower than before as dependant on the number of nodes(n)
 
 ## 3.Simple(Low memory) Bidirectional without Precomputation
 ### Algorithm:
