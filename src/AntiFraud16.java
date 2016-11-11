@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.lang.StringBuffer;
 
 class AntiFraud16{
     public static void main(String[] args){
@@ -116,14 +117,25 @@ class AntiFraud16{
     }
 
     public static void featureUniDirectional(Graph graph,String infilename,String outfilename){
-        String line="";
         BufferedReader br;
+        StringBuffer sb;
         try{
+            sb=new StringBuffer();
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outfilename)));
             br=new BufferedReader(new FileReader(infilename));
             br.readLine();
-            while ((line = br.readLine()) != null) {
-                int[] payment = preProcess(line);
+            while (true) {
+                // creating string till reaching the \n character
+                sb.setLength(0);
+                int ch;
+                while((ch = br.read()) != -1 && ch != '\n'){
+                    sb.append((char)ch);
+                }
+                if(ch==-1)
+                    break;
+
+                //preprocssing the single payment string 
+                int[] payment = preProcess(sb.toString());
                 if(payment.length==2){
                      if(checkSingle(graph,payment[0],payment[1])){
                         out.println("trusted");
@@ -136,6 +148,7 @@ class AntiFraud16{
                 }
             }
             out.close();
+            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         } 
@@ -143,14 +156,25 @@ class AntiFraud16{
 
 
     public static void featureBidirectional(Graph graph,String infilename,String outfilename){
-        String line="";
         BufferedReader br;
+        StringBuffer sb;
         try{
+            sb=new StringBuffer();
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outfilename)));
             br=new BufferedReader(new FileReader(infilename));
             br.readLine();
-            while ((line = br.readLine()) != null) {
-                int[] payment = preProcess(line);
+            while (true) {
+                // creating string till reaching the \n character
+                sb.setLength(0);
+                int ch;
+                while((ch = br.read()) != -1 && ch != '\n'){
+                    sb.append((char)ch);
+                }
+                if(ch==-1)
+                    break;
+
+                //preprocssing the single payment string 
+                int[] payment = preProcess(sb.toString());
                 if(payment.length==2){
                      if(checkSingle(graph,payment[0],payment[1]) || checkDouble(graph,payment[0],payment[1])){
                         out.println("trusted");
@@ -163,6 +187,7 @@ class AntiFraud16{
                 }
             }
             out.close();
+            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         } 

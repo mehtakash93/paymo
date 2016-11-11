@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
-
+import java.lang.StringBuffer;
 class AntiFraud8{
     public static void main(String[] args){
         String batchFileLocation=args[0];
@@ -17,38 +17,38 @@ class AntiFraud8{
         String output3FileLocation=args[4];
 
         try {
-            // Step 1: Call to build the inital and simple graph.
-            Graph g=buildGraph(batchFileLocation);
-            System.out.println("Initial Graph Created");
-            /* Step2 : For Feature 1. Simple lookup into any one(source or destination) adjecency lists. O(1) operation for each datapoint in the stream file.
-            So it is not affected by the size of batch processed graph.
-            */
-            long startTime = System.currentTimeMillis();
-            featureUniDirectional(g,streamFileLocation,output1FileLocation);
-            long endTime = System.currentTimeMillis();
-            long elapsedTime = endTime - startTime;
-            System.out.println("OutputText1 Created"+elapsedTime);
+                // Step 1: Call to build the inital and simple graph.
+                Graph g=buildGraph(batchFileLocation);
+                System.out.println("Initial Graph Created");
+                /* Step2 : For Feature 1. Simple lookup into any one(source or destination) adjecency lists. O(1) operation for each datapoint in the stream file.
+                So it is not affected by the size of batch processed graph.
+                */
+                long startTime = System.currentTimeMillis();
+                featureUniDirectional(g,streamFileLocation,output1FileLocation);
+                long endTime = System.currentTimeMillis();
+                long elapsedTime = endTime - startTime;
+                System.out.println("OutputText1 Created"+elapsedTime);
 
-            /* Best way would be to use the graph made till level2 and do a simple lookup. For 8gb ram, using just the O(n) operation during stream would be fine 
-            As storing the level2 graph in memory with 8gb ram is very slow and would cause lots of collisions and become slower eventually
-            But on 16gb level2 graph will working very well.
-            */
-            // For Level2
-            startTime = System.currentTimeMillis();
-            featureBidirectional(g,streamFileLocation,output2FileLocation);
-            endTime = System.currentTimeMillis();
-            elapsedTime = endTime - startTime;
-            System.out.println("OutputText2Created"+elapsedTime);
+                /* Best way would be to use the graph made till level2 and do a simple lookup. For 8gb ram, using just the O(n) operation during stream would be fine 
+                As storing the level2 graph in memory with 8gb ram is very slow and would cause lots of collisions and become slower eventually
+                But on 16gb level2 graph will working very well.
+                */
+                // For Level2
+                startTime = System.currentTimeMillis();
+                featureBidirectional(g,streamFileLocation,output2FileLocation);
+                endTime = System.currentTimeMillis();
+                elapsedTime = endTime - startTime;
+                System.out.println("OutputText2Created"+elapsedTime);
 
-            /* For Feature3- Doing bidirectional search at the time of stream as i cant precompute and store things in my 8gb ram laptop without collisions
-            Will Work slow, but works much faster on a 16gb ram laptop with precomputation till depth2.
-            */
+                /* For Feature3- Doing bidirectional search at the time of stream as i cant precompute and store things in my 8gb ram laptop without collisions
+                Will Work slow, but works much faster on a 16gb ram laptop with precomputation till depth2.
+                */
 
-            startTime = System.currentTimeMillis();
-            feature3(g,streamFileLocation,output3FileLocation);
-            endTime = System.currentTimeMillis();
-            elapsedTime = endTime - startTime;
-            System.out.println("OutputText3Created"+elapsedTime);
+                startTime = System.currentTimeMillis();
+                feature3(g,streamFileLocation,output3FileLocation);
+                endTime = System.currentTimeMillis();
+                elapsedTime = endTime - startTime;
+                System.out.println("OutputText3Created"+elapsedTime);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -59,15 +59,16 @@ class AntiFraud8{
     public static Graph buildGraph(String batchFileLocation) throws IOException{
        BufferedReader br = new BufferedReader(new FileReader(batchFileLocation));
        Graph graph=new Graph();
-        br.readLine(); // For ignoring the first Line        
-        String line="";
-        while ((line = br.readLine()) != null) {
+       br.readLine(); // For ignoring the first Line        
+       String line="";
+       while ((line = br.readLine()) != null) {
             int[] payment = preProcess(line);
             if(payment.length==2){
                 graph.addEdge(payment[0],payment[1]);
                 graph.addEdge(payment[1],payment[0]);
             }
         }
+        br.close();
         return graph;
     }
     
@@ -79,9 +80,9 @@ class AntiFraud8{
             try {
                     edge[0] = Integer.parseInt(row[1].trim());
                     edge[1] = Integer.parseInt(row[2].trim());
-                } catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                     return edge;
-                }
+            }
         }
         return edge;
     }
@@ -128,14 +129,25 @@ class AntiFraud8{
     /* For the case with just 8 gb ram, this function will only be used for feature1. If we have more ram, this function
     is the only thing needed*/
     public static void featureUniDirectional(Graph graph,String infilename,String outfilename){
-        String line="";
         BufferedReader br;
+        StringBuffer sb;
         try{
+            sb=new StringBuffer();
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outfilename)));
             br=new BufferedReader(new FileReader(infilename));
             br.readLine();
-            while ((line = br.readLine()) != null) {
-                int[] payment = preProcess(line);
+            while (true) {
+                // creating string till reaching the \n character
+                sb.setLength(0);
+                int ch;
+                while((ch = br.read()) != -1 && ch != '\n'){
+                    sb.append((char)ch);
+                }
+                if(ch==-1)
+                    break;
+
+                //preprocssing the single payment string 
+                int[] payment = preProcess(sb.toString());
                 if(payment.length==2){
                      if(checkSingle(graph,payment[0],payment[1])){
                         out.println("trusted");
@@ -148,7 +160,7 @@ class AntiFraud8{
                 }
             }
             out.close();
-
+            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         } 
@@ -157,14 +169,25 @@ class AntiFraud8{
     /* For the case with just 8 gb ram, this function will only be used for feature2. If we have more ram, this function
     can also be used for feature3 or nothing atall too*/
     public static void featureBidirectional(Graph graph,String infilename,String outfilename){
-        String line="";
         BufferedReader br;
+        StringBuffer sb;
         try{
+            sb=new StringBuffer();
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outfilename)));
             br=new BufferedReader(new FileReader(infilename));
             br.readLine();
-            while ((line = br.readLine()) != null) {
-                int[] payment = preProcess(line);
+            while (true) {
+                // creating string till reaching the \n character
+                sb.setLength(0);
+                int ch;
+                while((ch = br.read()) != -1 && ch != '\n'){
+                    sb.append((char)ch);
+                }
+                if(ch==-1)
+                    break;
+
+                //preprocssing the single payment string 
+                int[] payment = preProcess(sb.toString());
                 if(payment.length==2){
                      if(checkSingle(graph,payment[0],payment[1]) || checkDouble(graph,payment[0],payment[1])){
                         out.println("trusted");
@@ -177,7 +200,7 @@ class AntiFraud8{
                 }
             }
             out.close();
-
+            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         } 
@@ -187,14 +210,25 @@ class AntiFraud8{
     /* For the case with just 8 gb ram, this function will only be used for feature3. But this computes depth+intersection during stream
     processing whihc can be really slow. So avoid Using this generally*/
     public static void feature3(Graph graph,String infilename,String outfilename){
-        String line="";
         BufferedReader br;
+        StringBuffer sb;
         try{
+            sb=new StringBuffer();
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outfilename)));
             br=new BufferedReader(new FileReader(infilename));
             br.readLine();
-            while ((line = br.readLine()) != null) {
-                int[] payment = antifraud.preProcess(line);
+            while (true) {
+                // creating string till reaching the \n character
+                sb.setLength(0);
+                int ch;
+                while((ch = br.read()) != -1 && ch != '\n'){
+                    sb.append((char)ch);
+                }
+                if(ch==-1)
+                    break;
+
+                //preprocssing the single payment string 
+                int[] payment = antifraud.preProcess(sb.toString());
                 if(payment.length==2){
                     if(checkSingle(graph,payment[0],payment[1]) || checkDouble(graph,payment[0],payment[1]) || checkFour(graph,payment[0],payment[1])){
                         out.println("trusted");
@@ -206,6 +240,7 @@ class AntiFraud8{
                 }
             }
             out.close();
+            br.close();
 
         } catch (Exception e) {
             e.printStackTrace();
